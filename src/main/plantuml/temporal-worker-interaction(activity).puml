@@ -1,0 +1,22 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+
+    participant Worker as Worker
+    participant Frontend as "Frontend Service"
+    participant History as "History Service"
+    participant DB as "Database"
+
+    Worker->>Frontend: PollActivityTaskQueue (gRPC)
+    Frontend->>History: Récupère l’état du workflow
+    History-->>Frontend: Retourne les tâches disponibles
+    Frontend-->>Worker: Envoie une tâche d’activité
+
+    Worker->>Worker: Exécute l’activité
+    Worker->>Frontend: RespondActivityTaskCompleted (Résultat)
+
+    Frontend->>History: Met à jour l’historique du workflow
+    History->>DB: Enregistre l’état mis à jour
+
+
+@enduml
