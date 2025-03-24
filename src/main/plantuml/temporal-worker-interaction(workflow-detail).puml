@@ -1,0 +1,29 @@
+@startuml
+participant Worker
+participant Workflow
+participant "Activity Stub" as ActivityStub
+participant "Frontend Service" as Frontend
+participant "Activity Task Queue" as ActivityQueue
+participant "History Service" as History
+
+Worker -> Frontend : PollWorkflowTaskQueue (gRPC)
+Frontend -> History : Récupère l'historique du workflow
+History -> Worker : Envoie l'historique des événements
+
+Worker -> Workflow : Exécute la logique du workflow
+Workflow -> ActivityStub : Appelle une activité
+alt activité exécutée
+    ActivityStub -> Workflow : continue avec le résultat\nde l'activité issu de l'état\ndu workflow
+end
+alt activité non exécutée
+    ActivityStub -> Frontend: RespondWorkflowTaskCompleted (gRPC)
+    Frontend -> ActivityQueue : Planifie l'exécution d'une activité
+    Frontend -> History : Met à jour l'état du workflow (en attente d'activité)
+    ActivityStub -> Workflow : suspend l'exécution du workflow
+end
+
+Worker -> Frontend : RespondWorkflowTaskCompleted (gRPC)
+Frontend -> History : Met à jour l'état du workflow
+
+Worker -> Frontend : PollWorkflowTaskQueue (attente d'une nouvelle tâche)
+@enduml

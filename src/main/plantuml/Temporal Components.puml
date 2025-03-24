@@ -1,0 +1,47 @@
+@startuml
+
+package "Temporal" {
+    component "Frontend \nService" as Frontend
+    component "Matching \nService" as Matching
+    component "History \nService" as History
+    component "Web UI" as WebUI
+}
+
+package "Persistence Layer" as Persistence {
+
+    database Store {
+    }
+    note bottom of Store
+      PostgreSQL,
+      MySQL,
+      Cassandra
+    end note
+    database "Indexing \n& Search" as Index{
+    }
+    note bottom of Index
+      Elasticsearch,
+      Opensearch,
+      (PostgreSQL),
+      (MySQL),
+    end note
+}
+
+package "Clients" {
+    component "Worker" as Worker
+    component "SDK \n(Java, Go, etc.)" as SDK
+}
+
+Actor "Admin User" as Admin
+
+SDK --> Frontend : Start Workflows \n& Send Signals
+Frontend -> Matching : Dispatch\n Tasks
+Frontend -> History : Store\n Workflow Events
+Frontend -> Store : Metadata
+Matching -> Worker : Assign \nActivity Tasks
+History -> Store : Workflow History
+History -> Index : Workflow History
+Worker -> SDK : Execute Workflows\n & Activities
+Admin --> WebUI
+WebUI --> Index
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml
+participant Worker
+participant "Frontend Service" as Frontend
+participant "History Service" as History
+participant Database as DB
+
+Worker -> Frontend : PollWorkflowTaskQueue (gRPC)
+Frontend -> History : Récupère l'état du workflow
+History -> DB : Lire l'historique du workflow
+DB -> History : Retourne l'état
+History -> Frontend : Retourne la tâche du workflow
+
+Frontend -> Worker : Envoie la tâche de workflow
+
+Worker -> Worker : Exécute la tâche de workflow
+
+Worker -> Frontend : RespondWorkflowTaskCompleted (Résultat)
+
+Frontend -> History : Met à jour l'historique du workflow
+History -> DB : Sauvegarde l'état mis à jour
+
+Worker -> Frontend : PollWorkflowTaskQueue (gRPC) (prochaine tâche)
+@enduml
